@@ -1,0 +1,66 @@
+
+> eko-web@0.1.0 lint
+> eslint
+
+
+/Users/brunoprates/Documents/Codigo/playerAudio/web/eko-web/app/page.tsx
+  38:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  60:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  80:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/brunoprates/Documents/Codigo/playerAudio/web/eko-web/app/player/[playlistId]/page.tsx
+   11:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   27:44  warning  'togglePlay' is assigned a value but never used                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+   29:46  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   57:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  109:56  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/brunoprates/Documents/Codigo/playerAudio/web/eko-web/components/player/FullScreenPlayer.tsx
+  46:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/brunoprates/Documents/Codigo/playerAudio/web/eko-web/components/player/PlayerBar.tsx
+  33:51  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  94:47  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/brunoprates/Documents/Codigo/playerAudio/web/eko-web/lib/contexts/PlayerContext.tsx
+  54:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/brunoprates/Documents/Codigo/playerAudio/web/eko-web/lib/contexts/PlayerContext.tsx:54:9
+  52 |         const audio = new Audio();
+  53 |         audioRef.current = audio;
+> 54 |         setIsReady(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  55 |
+  56 |         return () => {
+  57 |             audio.pause();                                                                                                                                                                                                          react-hooks/set-state-in-effect
+  70:30  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `isReady`, but the source dependencies were [currentTrack, isPlaying]. Inferred different dependency than source.
+
+/Users/brunoprates/Documents/Codigo/playerAudio/web/eko-web/lib/contexts/PlayerContext.tsx:70:30
+  68 |
+  69 |     // Playback Control
+> 70 |     const play = useCallback((track: Track) => {
+     |                              ^^^^^^^^^^^^^^^^^^^
+> 71 |         if (!audioRef.current || !isReady) return;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 72 |
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 89 |         audioRef.current.play().catch(e => console.error("Play error:", e));
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 90 |     }, [currentTrack, isPlaying]);
+     | ^^^^^^ Could not preserve existing manual memoization
+  91 |
+  92 |     const pause = useCallback(() => {
+  93 |         if (audioRef.current) {  react-hooks/preserve-manual-memoization
+  90:8   warning  React Hook useCallback has a missing dependency: 'isReady'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/exhaustive-deps
+
+✖ 14 problems (4 errors, 10 warnings)
+

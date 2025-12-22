@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+:root {
+  /* Design System from User Request */
+
+  /* Backgrounds */
+  --bg-base: #f2efe9;
+  --bg-app: #fdfbf7;
+
+  /* Text */
+  --text-primary: #4a453e;
+  /* Marrom Café */
+  --text-secondary: #5c554b;
+  --text-accent: #d67c66;
+  /* Terracota */
+
+  /* Fonts */
+  --font-serif: var(--font-serif), 'Playfair Display', serif;
+  --font-sans: var(--font-inter), 'Inter', sans-serif;
+}
+
+body {
+  color: var(--text-primary);
+  background: var(--bg-base);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  /* Ensure full height for background color consistency */
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-serif);
+}
+
+/* Glassmorphism Utilities - Strict Reference */
+.glass {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Utility to hide scrollbar but keep functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Soft UI Shadows for Full Player */
+.soft-shadow {
+  box-shadow: 0 30px 80px rgba(101, 101, 101, 0.3);
+}
+
+.soft-shadow-sm {
+  box-shadow: 0 8px 30px rgba(214, 124, 102, 0.15);
+}
+
+@keyframes soundwave {
+
+  0%,
+  100% {
+    height: 4px;
+  }
+
+  50% {
+    height: 16px;
+  }
+}
+
+.bar {
+  animation: soundwave 1s infinite ease-in-out;
+  background-color: #A65D46;
+  /* Cor Terracota */
+  width: 3px;
+  border-radius: 99px;
+}
+
+.bar:nth-child(1) {
+  animation-delay: 0.0s;
+}
+
+.bar:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.bar:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.bar:nth-child(4) {
+  animation-delay: 0.1s;
+}
+
+.bar:nth-child(5) {
+  animation-delay: 0.3s;
+}
