@@ -3,23 +3,26 @@ import React, { useEffect, useRef, useState } from 'react';
 import anime from 'animejs';
 import ColorThief from 'colorthief';
 import { useAudioStore } from '../../store/useAudioStore';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, SkipForward } from 'lucide-react';
 
 export default function MiniPlayer() {
     const {
         currentTrack,
         isPlaying,
         togglePlayPause,
-        setPlayerVisible,
+        maximizePlayer,
+        isPlayerVisible,
         currentTime,
         duration,
+        nextTrack,
     } = useAudioStore();
 
     const containerRef = useRef<HTMLDivElement>(null);
-    const [bgColor, setBgColor] = useState('rgba(214, 124, 102, 0.9)'); // Default terracota
+    const [bgColor, setBgColor] = useState('rgba(214, 124, 102, 0.9)');
     const progressPercent = duration ? (currentTime / duration) * 100 : 0;
 
-    // Extract dominant color from album art
+    // ... (useEffect for color extraction remains same)
+
     useEffect(() => {
         if (currentTrack?.cover) {
             const img = new Image();
@@ -29,7 +32,7 @@ export default function MiniPlayer() {
                 try {
                     const colorThief = new ColorThief();
                     const color = colorThief.getColor(img);
-                    setBgColor(`rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.9)`);
+                    setBgColor(`rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.95)`);
                 } catch (e) {
                     console.error("Color extraction failed", e);
                 }
@@ -37,57 +40,66 @@ export default function MiniPlayer() {
         }
     }, [currentTrack]);
 
-    // Slide-up animation on mount using anime.js
     useEffect(() => {
-        if (containerRef.current && currentTrack) {
+        if (containerRef.current && currentTrack && !isPlayerVisible) {
             anime({
                 targets: containerRef.current,
-                translateY: [100, 0],
+                translateY: [40, 0],
                 opacity: [0, 1],
-                duration: 800,
-                easing: 'easeOutElastic(1, .6)',
+                duration: 600,
+                easing: 'spring(1, 80, 10, 0)',
             });
         }
-    }, [currentTrack]);
+    }, [currentTrack, isPlayerVisible]);
 
-    if (!currentTrack) return null;
+    if (!currentTrack || isPlayerVisible) return null;
 
     return (
         <div
             ref={containerRef}
-            onClick={() => setPlayerVisible(true)}
-            className="fixed bottom-6 left-4 right-4 z-40 cursor-pointer"
-            style={{ opacity: 0 }} // Initial state for anime.js
+            onClick={maximizePlayer}
+            className="absolute bottom-[88px] left-4 right-4 z-40 cursor-pointer"
+            style={{ opacity: 0 }}
         >
             <div
-                className="relative rounded-2xl shadow-xl overflow-hidden backdrop-blur-md border border-white/50"
-                style={{ background: bgColor }}
+                className="relative bg-[#F4F6F0]/85 backdrop-blur-xl rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] border border-white/60 flex items-center p-3 gap-3"
             >
-                {/* Progress Bar at Bottom */}
-                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/20">
+                {/* Progress Bar (Bottom Edge) */}
+                <div className="absolute bottom-0 left-4 right-4 h-[3px] bg-[#E0E5D5] rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-white/80 transition-all duration-300"
+                        className="h-full bg-[#A05E46] transition-all duration-300 rounded-full"
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
 
-                {/* Content */}
-                <div className="p-3 flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-xl overflow-hidden shadow-sm shrink-0 ${isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''}`}>
-                        <img
-                            src={currentTrack.cover}
-                            className="w-full h-full object-cover"
-                            alt="Cover"
-                        />
-                    </div>
+                {/* Album Art */}
+                <div className="relative w-12 h-12 shrink-0 rounded-md overflow-hidden shadow-sm">
+                    <img
+                        src={currentTrack.cover}
+                        className="w-full h-full object-cover"
+                        alt="Cover"
+                    />
+                </div>
 
-                    <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-white truncate">
-                            {currentTrack.title}
-                        </h4>
-                        <p className="text-xs text-white/80 truncate">
-                            {currentTrack.category}
-                        </p>
+                {/* Info */}
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <h4 className="text-sm font-bold text-black truncate leading-tight">
+                        {currentTrack.title}
+                    </h4>
+                    <p className="text-[11px] text-black/60 truncate font-medium">
+                        {currentTrack.artist || currentTrack.category}
+                    </p>
+                </div>
+
+                {/* Controls */}
+                <div className="flex items-center gap-3 ml-auto pr-1 pb-1">
+                    {/* Visualizer Icon Placeholder */}
+                    <div className="w-8 h-8 flex items-center justify-center opacity-40">
+                        <div className="flex gap-0.5 items-end h-3">
+                            <div className="w-0.5 bg-black animate-[soundwave_1s_infinite] h-2"></div>
+                            <div className="w-0.5 bg-black animate-[soundwave_1.2s_infinite] h-full"></div>
+                            <div className="w-0.5 bg-black animate-[soundwave_0.8s_infinite] h-1.5"></div>
+                        </div>
                     </div>
 
                     <button
@@ -95,13 +107,23 @@ export default function MiniPlayer() {
                             e.stopPropagation();
                             togglePlayPause();
                         }}
-                        className="w-10 h-10 rounded-full bg-white/90 text-[#d67c66] flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform"
+                        className="w-10 h-10 rounded-full bg-white/50 border border-white/60 flex items-center justify-center text-black hover:scale-105 active:scale-95 transition-all shadow-sm"
                     >
                         {isPlaying ? (
                             <Pause size={18} fill="currentColor" />
                         ) : (
                             <Play size={18} fill="currentColor" className="ml-0.5" />
                         )}
+                    </button>
+
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            nextTrack();
+                        }}
+                        className="w-10 h-10 rounded-full bg-white/50 border border-white/60 flex items-center justify-center text-black hover:scale-105 active:scale-95 transition-all shadow-sm"
+                    >
+                        <SkipForward size={18} fill="currentColor" />
                     </button>
                 </div>
             </div>

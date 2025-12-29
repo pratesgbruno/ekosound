@@ -1,121 +1,220 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { audioController } from '../lib/AudioController';
 
 export interface Track {
-    id: number | string;
+    id: string | number;
     title: string;
     artist?: string;
-    category: string;
-    catId?: string;
+    category?: string;
     src: string;
-    cover: string;
+    cover?: string;
     description?: string;
-    duration?: number;
+    catId?: string;
+}
+
+interface PlayerContext {
+    type: 'home' | 'playlist' | 'artist';
+    id?: string;
 }
 
 interface AudioState {
-    isPlaying: boolean;
-    isPlayerVisible: boolean;
+    // Media State
     currentTrack: Track | null;
-    volume: number; // 0 to 1
-    isMuted: boolean;
+    queue: Track[]; // Not fully implemented queue logic yet, but state exists
+    context: PlayerContext;
+
+    // Playback State
+    isPlaying: boolean;
     currentTime: number;
     duration: number;
-    dominantColor: string;
-    requestedTime: number | null; // For seeking
+    volume: number;
+    isMuted: boolean;
+    repeatMode: 'off' | 'all' | 'one';
+    shuffle: boolean;
 
-    playlist: Track[];
-    setPlaylist: (tracks: Track[]) => void;
-    // Actions
-    playTrack: (track: Track) => void;
-    togglePlayPause: () => void;
-    setIsPlaying: (isPlaying: boolean) => void;
-    setPlayerVisible: (visible: boolean) => void;
-    setVolume: (volume: number) => void;
-    toggleMute: () => void;
-    seek: (time: number) => void;
-    setCurrentTime: (time: number) => void;
-    setDuration: (duration: number) => void;
-    setDominantColor: (color: string) => void;
-    setRequestedTime: (time: number | null) => void;
-    nextTrack: () => void; // Placeholder for now, logic likely needs playlist knowledge
-    prevTrack: () => void;
+    // UI State
+    isPlayerVisible: boolean; // Full Player
+    isMiniPlayerVisible: boolean; // Derived usually, but useful if we want to hide it explicitly
+    activePanel: 'none' | 'lyrics' | 'queue' | 'device';
+    reduceTransparency: boolean;
+    hasHydrated: boolean;
+
+    // Favorites (persisted)
     favorites: (string | number)[];
-    toggleFavorite: (trackId: string | number) => void;
-    // Helper to init favorites from local storage
-    initializeFavorites: () => void;
+
+    // Actions
+    playTrack: (track: Track, context?: PlayerContext) => void;
+    togglePlayPause: () => void;
+    setIsPlaying: (playing: boolean) => void;
+    seek: (time: number) => void;
+    setVolume: (vol: number) => void;
+    toggleMute: () => void;
+    nextTrack: () => void;
+    prevTrack: () => void;
+
+    // UI Actions
+    setPlayerVisible: (visible: boolean) => void;
+    maximizePlayer: () => void;
+    minimizePlayer: () => void;
+    setActivePanel: (panel: 'none' | 'lyrics' | 'queue' | 'device') => void;
+    toggleFavorite: (id: string | number) => void;
+    setReduceTransparency: (reduce: boolean) => void;
+
+    // Internal Sync
+    syncTime: (time: number, duration: number) => void;
+    setHasHydrated: (val: boolean) => void;
+    initializeFavorites: () => void; // Legacy support match
+    setPlaylist: (tracks: Track[]) => void; // Legacy support
 }
 
-export const useAudioStore = create<AudioState>((set, get) => ({
-    isPlaying: false,
-    isPlayerVisible: false,
-    currentTrack: null,
-    playlist: [],
-    volume: 1,
-    isMuted: false,
-    currentTime: 0,
-    duration: 0,
-    dominantColor: '#121212',
-    favorites: [],
-    requestedTime: null,
+export const useAudioStore = create<AudioState>()(
+    persist(
+        (set, get) => ({
+            currentTrack: null,
+            queue: [],
+            context: { type: 'home' },
 
-    playTrack: (track) => set((state) => {
-        if (state.currentTrack?.id === track.id) {
-            return { isPlaying: !state.isPlaying, isPlayerVisible: true };
-        }
-        return { currentTrack: track, isPlaying: true, isPlayerVisible: true };
-    }),
+            isPlaying: false,
+            currentTime: 0,
+            duration: 0,
+            volume: 1,
+            isMuted: false,
+            repeatMode: 'off',
+            shuffle: false,
 
-    togglePlayPause: () => set((state) => ({ isPlaying: !state.isPlaying })),
-    setIsPlaying: (isPlaying) => set({ isPlaying }),
-    setPlayerVisible: (visible) => set({ isPlayerVisible: visible }),
-    setVolume: (volume) => set({ volume, isMuted: false }), // Unmute on volume change
-    toggleMute: () => set((state) => ({ isMuted: !state.isMuted })),
-    seek: (time) => set({ requestedTime: time }), // Signal to engine
-    setRequestedTime: (time) => set({ requestedTime: time }), // Reset signal
-    setCurrentTime: (currentTime) => set({ currentTime }),
-    setDuration: (duration) => set({ duration }),
-    setDominantColor: (dominantColor) => set({ dominantColor }),
-    setPlaylist: (playlist) => set({ playlist }),
+            isPlayerVisible: false,
+            isMiniPlayerVisible: true,
+            activePanel: 'none',
+            reduceTransparency: false,
+            hasHydrated: false,
+            favorites: [],
 
-    nextTrack: () => {
-        const { currentTrack, playlist } = get();
-        if (!currentTrack || playlist.length === 0) return;
-        const currentIndex = playlist.findIndex(t => t.id === currentTrack.id);
-        const nextIndex = (currentIndex + 1) % playlist.length;
-        set({ currentTrack: playlist[nextIndex], isPlaying: true });
-    },
+            playTrack: (track, context) => {
+                const state = get();
 
-    prevTrack: () => {
-        const { currentTrack, playlist } = get();
-        if (!currentTrack || playlist.length === 0) return;
-        const currentIndex = playlist.findIndex(t => t.id === currentTrack.id);
-        const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
-        set({ currentTrack: playlist[prevIndex], isPlaying: true });
-    },
-
-    toggleFavorite: (trackId) => set((state) => {
-        const isFav = state.favorites.includes(trackId);
-        const newFavorites = isFav
-            ? state.favorites.filter(id => id !== trackId)
-            : [...state.favorites, trackId];
-
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('eko_favorites', JSON.stringify(newFavorites));
-        }
-        return { favorites: newFavorites };
-    }),
-
-    initializeFavorites: () => {
-        if (typeof window !== 'undefined') {
-            try {
-                const saved = localStorage.getItem('eko_favorites');
-                if (saved) {
-                    set({ favorites: JSON.parse(saved) });
+                // If it's a new track, load and play
+                if (state.currentTrack?.id !== track.id) {
+                    audioController.playTrack(track.src);
+                    set({
+                        currentTrack: track,
+                        isPlaying: true,
+                        isPlayerVisible: true, // Auto-expand as requested
+                        context: context || state.context
+                    });
+                } else {
+                    // Same track, just ensure playing and expand
+                    if (!state.isPlaying) {
+                        audioController.togglePlay();
+                        set({ isPlaying: true });
+                    }
+                    set({ isPlayerVisible: true });
                 }
-            } catch (e) {
-                console.error("Failed to parse favorites", e);
+            },
+
+            togglePlayPause: () => {
+                const state = get();
+                if (state.currentTrack) {
+                    audioController.togglePlay();
+                    set({ isPlaying: !state.isPlaying });
+                }
+            },
+
+            setIsPlaying: (playing) => set({ isPlaying: playing }),
+
+            seek: (time) => {
+                audioController.seek(time);
+                set({ currentTime: time });
+            },
+
+            setVolume: (vol) => {
+                audioController.setVolume(vol);
+                set({ volume: vol });
+            },
+
+            toggleMute: () => {
+                const state = get();
+                const newMute = !state.isMuted;
+                audioController.setVolume(newMute ? 0 : state.volume);
+                set({ isMuted: newMute });
+            },
+
+            nextTrack: () => {
+                const state = get();
+                if (!state.currentTrack || state.queue.length === 0) return;
+
+                const currentIndex = state.queue.findIndex(t => t.id === state.currentTrack?.id);
+                const nextIndex = (currentIndex + 1) % state.queue.length;
+                const nextTrack = state.queue[nextIndex];
+
+                if (nextTrack) {
+                    state.playTrack(nextTrack, state.context);
+                }
+            },
+
+            prevTrack: () => {
+                const state = get();
+                if (!state.currentTrack || state.queue.length === 0) return;
+
+                const currentIndex = state.queue.findIndex(t => t.id === state.currentTrack?.id);
+                const prevIndex = (currentIndex - 1 + state.queue.length) % state.queue.length;
+                const prevTrack = state.queue[prevIndex];
+
+                if (prevTrack) {
+                    state.playTrack(prevTrack, state.context);
+                }
+            },
+
+            setPlayerVisible: (visible) => set({ isPlayerVisible: visible }),
+            maximizePlayer: () => set({ isPlayerVisible: true }),
+            minimizePlayer: () => set({ isPlayerVisible: false }),
+            setActivePanel: (panel) => set({ activePanel: panel }),
+
+            toggleFavorite: (id) => set((state) => {
+                const favs = state.favorites.includes(id)
+                    ? state.favorites.filter(f => f !== id)
+                    : [...state.favorites, id];
+                return { favorites: favs };
+            }),
+
+            setReduceTransparency: (reduce) => set({ reduceTransparency: reduce }),
+
+            syncTime: (time, duration) => set({ currentTime: time, duration }),
+            setHasHydrated: (val) => set({ hasHydrated: val }),
+
+            initializeFavorites: () => { }, // Handled by persist
+            setPlaylist: (tracks) => set({ queue: tracks })
+        }),
+        {
+            name: 'ekosound-storage-v3', // New version key
+            partialize: (state) => ({
+                // Persist only what we need
+                currentTrack: state.currentTrack,
+                queue: state.queue,
+                volume: state.volume,
+                favorites: state.favorites,
+                repeatMode: state.repeatMode,
+                shuffle: state.shuffle,
+                reduceTransparency: state.reduceTransparency
+                // Explicitly NOT persistsing isPlaying
+            }),
+            onRehydrateStorage: () => (state) => {
+                state?.setHasHydrated(true);
             }
         }
-    }
-}));
+    )
+);
 
+// Hook up AudioController events to Store
+// This needs to run once. We can put it here or in a helper.
+// placing inside the file ensures it runs when module is imported.
+if (typeof window !== 'undefined') {
+    audioController.on('timeupdate', ({ currentTime, duration }) => {
+        useAudioStore.getState().syncTime(currentTime, duration);
+    });
+    audioController.on('ended', () => {
+        useAudioStore.getState().setIsPlaying(false); // Or nextTrack()
+    });
+    audioController.on('play', () => useAudioStore.getState().setIsPlaying(true));
+    audioController.on('pause', () => useAudioStore.getState().setIsPlaying(false));
+}

@@ -6,9 +6,10 @@ interface RotatingCoverProps {
     cover: string;
     isPlaying: boolean;
     isBuffering?: boolean;
+    scale?: number;
 }
 
-export default function RotatingCover({ cover, isPlaying, isBuffering = false }: RotatingCoverProps) {
+export default function RotatingCover({ cover, isPlaying, isBuffering = false, scale = 1.0 }: RotatingCoverProps) {
     const coverRef = useRef<HTMLDivElement>(null);
     const rotationRef = useRef<anime.AnimeInstance | null>(null);
 
@@ -47,7 +48,10 @@ export default function RotatingCover({ cover, isPlaying, isBuffering = false }:
     }, [isPlaying, isBuffering]);
 
     return (
-        <div className="relative w-48 h-48 rounded-[30px] overflow-hidden shadow-2xl shrink-0">
+        <div
+            className="relative w-full h-full rounded-[30px] overflow-hidden shadow-2xl shrink-0 album-art-transform"
+            style={{ transform: `scale(${scale})` }}
+        >
             <div
                 ref={coverRef}
                 className={`w-full h-full transition-all duration-300 ${isBuffering ? 'blur-sm' : ''}`}

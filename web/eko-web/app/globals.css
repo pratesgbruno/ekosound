@@ -4,14 +4,17 @@
   /* Design System from User Request */
 
   /* Backgrounds */
-  --bg-base: #f2efe9;
-  --bg-app: #fdfbf7;
+  --bg-base: #f4f6f0;
+  /* Sage Light */
+  --bg-app: transparent;
+  /* For layout transparency */
 
   /* Text */
-  --text-primary: #4a453e;
-  /* Marrom Café */
-  --text-secondary: #5c554b;
-  --text-accent: #d67c66;
+  --text-primary: #1a3c34;
+  /* Dark Forest Green */
+  --text-secondary: #5c6b65;
+  /* Sage Grey */
+  --text-accent: #a05e46;
   /* Terracota */
 
   /* Fonts */
@@ -46,11 +49,13 @@ h6 {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.glass-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%);
-  backdrop-filter: blur(10px);
+.glass-panel {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
 }
 
 /* Utility to hide scrollbar but keep functionality */
@@ -70,6 +75,25 @@ h6 {
 
 .soft-shadow-sm {
   box-shadow: 0 8px 30px rgba(214, 124, 102, 0.15);
+}
+
+/* Parallax Container */
+.parallax-container {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+.album-art-transform {
+  transition: transform 0.1s linear;
+  will-change: transform;
+}
+
+.sticky-player-header {
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(40px);
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 100;
 }
 
 @keyframes soundwave {

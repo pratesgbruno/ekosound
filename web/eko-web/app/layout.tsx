@@ -4,6 +4,9 @@ import "./globals.css";
 import AudioEngine from "./components/AudioEngine";
 import { ToastProvider } from "./context/ToastContext";
 import PlayerOverlay from "./components/PlayerOverlay";
+import MiniPlayer from "./components/MiniPlayer";
+import BottomNavigation from "./components/BottomNavigation";
+import OrganicBackground from "./components/OrganicBackground";
 
 
 const inter = Inter({
@@ -19,7 +22,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "SonicWave Player",
+  title: "EkoSound Player",
   description: "Experience music with glassmorphism",
 };
 
@@ -29,16 +32,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body
-        className={`${inter.variable} ${playfair.variable} antialiased font-sans bg-[#f2efe9] flex justify-center items-center min-h-screen p-4`}
+        className={`${inter.variable} ${playfair.variable} antialiased font-sans flex justify-center min-h-[100dvh] bg-[#fdfbf7]`}
         suppressHydrationWarning
       >
-        <div className="relative w-full max-w-[390px] h-[844px] bg-[#fdfbf7] rounded-[40px] shadow-2xl overflow-hidden flex flex-col">
+        <OrganicBackground />
+
+        {/* Content Shell: Global container logic - Mobile First optimized constrained width on Desktop */}
+        <div className="relative w-full max-w-[480px] min-h-[100dvh] flex flex-col mx-auto shadow-2xl overflow-hidden bg-transparent">
           <ToastProvider>
             <AudioEngine />
+
+            <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32 no-scrollbar relative z-10 w-full flex flex-col">
+              {children}
+            </main>
+
+            <MiniPlayer />
+            <BottomNavigation />
             <PlayerOverlay />
-            {children}
           </ToastProvider>
         </div>
       </body>
