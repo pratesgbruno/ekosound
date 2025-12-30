@@ -82,10 +82,10 @@ export default function CategoryScroll({ categories, selectedCategory, onSelect 
     };
 
     return (
-        <div className="pb-6 shrink-0 z-10 w-full overflow-hidden select-none">
+        <div className="shrink-0 z-10 w-full overflow-hidden select-none">
             <div
                 ref={sliderRef}
-                className="w-full overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing px-6 flex items-center no-scrollbar"
+                className="w-full overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing px-6 py-5 flex items-center no-scrollbar"
                 style={{ scrollSnapType: 'none', scrollBehavior: 'auto' }}
                 onMouseDown={handleMouseDown}
             >
@@ -97,15 +97,17 @@ export default function CategoryScroll({ categories, selectedCategory, onSelect 
                             onSelect(null);
                             e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                         }}
-                        className="flex flex-col items-center gap-2 cursor-pointer snap-start group"
+                        className="flex flex-col items-center cursor-pointer snap-start"
                     >
-                        <div className={`w-32 h-20 rounded-2xl p-0.5 border-2 transition-all duration-300 ${!selectedCategory ? 'border-[#a05e46] scale-[1.02]' : 'border-transparent hover:border-[#a05e46]/20'}`}>
-                            <div className={`w-full h-full rounded-xl bg-white/40 backdrop-blur-md flex flex-col items-center justify-center text-[#1a3c34] overflow-hidden shadow-sm relative`}>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mb-1 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
-                                <span className={`text-[11px] font-bold tracking-tight transition-colors ${!selectedCategory ? 'text-[#a05e46]' : 'text-[#1a3c34]'}`}>
-                                    Todos
+                        <div className={`w-28 h-24 rounded-[32px] p-0.5 border-2 transition-all duration-500 ease-out ${!selectedCategory ? 'border-[#a05e46] shadow-xl shadow-[#a05e46]/15 -translate-y-1.5' : 'border-transparent'}`}>
+                            <div className={`w-full h-full rounded-[28px] bg-white/40 backdrop-blur-xl flex flex-col items-center justify-center text-[#1a3c34] overflow-hidden relative transition-all ${!selectedCategory ? 'bg-white/70' : 'hover:bg-white/60'}`}>
+                                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-2 transition-all ${!selectedCategory ? 'bg-[#a05e46] text-white shadow-md' : 'bg-black/5 text-[#1a3c34]'}`}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
+                                    </svg>
+                                </div>
+                                <span className={`text-[11px] font-black tracking-tight transition-colors ${!selectedCategory ? 'text-[#a05e46]' : 'text-[#1a3c34]'}`}>
+                                    Explorar Todos
                                 </span>
                             </div>
                         </div>
@@ -120,14 +122,16 @@ export default function CategoryScroll({ categories, selectedCategory, onSelect 
                                 onSelect(cat.id === selectedCategory ? null : cat.id);
                                 e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                             }}
-                            className="flex flex-col items-center gap-2 cursor-pointer snap-start group"
+                            className="flex flex-col items-center cursor-pointer snap-start"
                         >
-                            <div className={`w-32 h-20 rounded-2xl p-0.5 border-2 transition-all duration-300 ${selectedCategory === cat.id ? 'border-[#a05e46] scale-[1.02]' : 'border-transparent hover:border-[#a05e46]/20'}`}>
-                                <div className={`w-full h-full rounded-xl ${cat.bg} opacity-90 flex flex-col items-center justify-center ${cat.color} overflow-hidden shadow-sm relative`}>
-                                    <div className="opacity-60 mb-1 scale-90">
-                                        {cat.icon}
+                            <div className={`w-32 h-24 rounded-[32px] p-0.5 border-2 transition-all duration-500 ease-out ${selectedCategory === cat.id ? 'border-[#a05e46] shadow-xl shadow-[#a05e46]/15 -translate-y-1.5' : 'border-transparent'}`}>
+                                <div className={`w-full h-full rounded-[28px] ${cat.bg} backdrop-blur-xl flex flex-col items-center justify-center ${cat.color} overflow-hidden relative transition-all ${selectedCategory === cat.id ? 'opacity-100 bg-white/60' : 'opacity-85 hover:opacity-100'}`}>
+                                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-2 transition-all ${selectedCategory === cat.id ? 'bg-[#a05e46] text-white shadow-lg' : 'bg-white/50 shadow-sm'}`}>
+                                        <div className="scale-100">
+                                            {cat.icon}
+                                        </div>
                                     </div>
-                                    <span className={`text-[11px] font-bold tracking-tight text-center px-2 leading-tight transition-colors ${selectedCategory === cat.id ? 'text-[#1a3c34]' : ''}`}>
+                                    <span className={`text-[10px] font-black tracking-tight text-center px-3 leading-[1.1] transition-colors ${selectedCategory === cat.id ? 'text-[#1a3c34]' : 'text-current opacity-90'}`}>
                                         {cat.label}
                                     </span>
                                 </div>

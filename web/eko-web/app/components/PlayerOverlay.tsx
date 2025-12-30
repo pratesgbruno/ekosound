@@ -28,16 +28,30 @@ export default function PlayerOverlay() {
 
     const { showToast } = useToast();
     const [localColor, setLocalColor] = useState('#1a3c34');
-    const [scrollY, setScrollY] = useState(0);
     const [albumScale, setAlbumScale] = useState(1.0);
     const [showStickyHeader, setShowStickyHeader] = useState(false);
     const [showActionSheet, setShowActionSheet] = useState(false);
+    const [bgImage, setBgImage] = useState('');
     const overlayRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+    const BG_IMAGES = [
+        '0.png', '1.png', '2.jpg', '3.jpg', '4.jpg', '5.jpg', '6.jpg', '7.jpg',
+        '8.jpg', '9.jpg', '10.jpg', '11.jpg', '12.jpg', '13.jpg', '15.jpg',
+        '16.jpg', '16.png', '17.jpg'
+    ];
+
+    // Background Image Selection
+    useEffect(() => {
+        if (currentTrack?.id) {
+            const randomIndex = Math.floor(Math.random() * BG_IMAGES.length);
+            setBgImage(`/bg/${BG_IMAGES[randomIndex]}`);
+        }
+    }, [currentTrack?.id]);
+
     // Color Extraction
     useEffect(() => {
-        if (currentTrack?.cover) {
+        if (currentTrack?.cover && currentTrack.type !== 'video') {
             const img = new Image();
             img.crossOrigin = 'Anonymous';
             img.src = currentTrack.cover;
@@ -51,33 +65,23 @@ export default function PlayerOverlay() {
         }
     }, [currentTrack]);
 
-    // Scroll Handler - Parallax Logic
+    // Scroll Handler
     const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
         const scrollTop = e.currentTarget.scrollTop;
-        setScrollY(scrollTop);
-
-        // Album scale: 1.0 → 0.7 over 300px
         const newScale = Math.max(0.7, 1.0 - (scrollTop / 600));
         setAlbumScale(newScale);
-
-        // Sticky header appears after 300px
-        setShowStickyHeader(scrollTop > 300);
+        setShowStickyHeader(scrollTop > 200);
     };
 
-    // ANIMATION: FLIP-like Entrance
+    // Entrance Animation
     useEffect(() => {
         if (isPlayerVisible && overlayRef.current) {
-            overlayRef.current.style.opacity = '0';
-            overlayRef.current.style.transform = 'translateY(100px) scale(0.95)';
-
             anime({
                 targets: overlayRef.current,
                 opacity: [0, 1],
-                translateY: [40, 0],
-                scale: [0.95, 1],
-                duration: 500,
+                translateY: [100, 0],
                 easing: 'spring(1, 80, 10, 0)',
-                delay: 50
+                duration: 500
             });
         }
     }, [isPlayerVisible]);
@@ -87,10 +91,9 @@ export default function PlayerOverlay() {
             anime({
                 targets: overlayRef.current,
                 opacity: 0,
-                translateY: 40,
-                scale: 0.95,
+                translateY: 100,
+                easing: 'easeInQuad',
                 duration: 300,
-                easing: 'easeOutQuad',
                 complete: () => minimizePlayer()
             });
         } else {
@@ -103,10 +106,9 @@ export default function PlayerOverlay() {
     const isFav = favorites.includes(currentTrack.id);
     const progressPercent = duration ? (currentTime / duration) * 100 : 0;
 
-    // Mock artist data
     const artistInfo = {
         name: currentTrack.artist || "EkoSound",
-        bio: "Música terapêutica criada especialmente para ajudar no alívio da ansiedade, foco e relaxamento profundo. Combinamos sons binaurais com melodias suaves.",
+        bio: "Música terapêutica criada especialmente para ajudar no alívio da ansiedade, foco e relaxamento profundo.",
         monthlyListeners: 12500,
         isFollowing: false
     };
@@ -114,157 +116,148 @@ export default function PlayerOverlay() {
     return (
         <div
             ref={overlayRef}
-            className="absolute inset-0 z-[100] flex flex-col"
-            style={{
-                background: `linear-gradient(to bottom, ${localColor} 0%, #000000 100%)`,
-            }}
+            className={`absolute inset-0 z-[100] flex flex-col overflow-hidden ${currentTrack.type === 'video' ? 'bg-transparent pointer-events-none' : 'bg-black'}`}
         >
-            {/* Sticky Header (Appears on Scroll) */}
-            {showStickyHeader && (
-                <div className="sticky-player-header flex items-center justify-between px-6 py-4 border-b border-white/10">
-                    <button onClick={handleClose} className="p-2 -ml-2">
-                        <ChevronDown size={24} className="text-white" />
-                    </button>
-                    <div className="flex-1 text-center">
-                        <p className="text-sm font-bold text-white truncate">{currentTrack.title}</p>
-                        <p className="text-xs text-white/60 truncate">{currentTrack.artist || currentTrack.category}</p>
-                    </div>
-                    <button
-                        onClick={togglePlayPause}
-                        className="p-2 -mr-2"
-                    >
-                        {isPlaying ? (
-                            <Pause size={24} className="text-white" fill="currentColor" />
-                        ) : (
-                            <Play size={24} className="text-white" fill="currentColor" />
-                        )}
-                    </button>
-                </div>
+            {/* Background Image Layer */}
+            {currentTrack.type !== 'video' && bgImage && (
+                <div
+                    className="absolute inset-0 z-0 scale-110"
+                    style={{
+                        backgroundImage: `url(${bgImage})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        filter: 'blur(30px) brightness(0.4)',
+                        opacity: 0.8
+                    }}
+                />
             )}
 
-            {/* Scrollable Content */}
+            {/* Video Background placeholder - Handled by PersistentVideo globally to keep playing */}
+            {currentTrack.type === 'video' && (
+                <div className="absolute top-0 left-0 right-0 h-[60vh] z-[1] pointer-events-none bg-gradient-to-b from-black/60 via-transparent to-black/80" />
+            )}
+
+            {currentTrack.type !== 'video' && (
+                <div className="absolute inset-0 z-[1]" style={{ background: `linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.8) 100%)` }} />
+            )}
+
+            {/* Header Controls */}
+            <div className="absolute top-0 left-0 right-0 z-[50] flex justify-between items-center p-6 pointer-events-none">
+                <button
+                    onClick={handleClose}
+                    className="p-2 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white transition-colors pointer-events-auto"
+                >
+                    <ChevronDown size={24} />
+                </button>
+                <div className="text-center pointer-events-none">
+                    <span className="text-[10px] font-bold tracking-[0.2em] text-white/70 uppercase block">
+                        {currentTrack.artist || "EkoSound"}
+                    </span>
+                    {showStickyHeader && (
+                        <p className="text-xs font-bold text-white truncate max-w-[200px] animate-in fade-in slide-in-from-top-1">
+                            {currentTrack.title}
+                        </p>
+                    )}
+                </div>
+                <button
+                    onClick={() => setShowActionSheet(true)}
+                    className="p-2 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white transition-colors pointer-events-auto"
+                >
+                    <MoreHorizontal size={24} />
+                </button>
+            </div>
+
+            {/* Scroll Container */}
             <div
                 ref={scrollContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto parallax-container scrollbar-hide"
+                className="absolute inset-0 z-10 overflow-y-auto scrollbar-hide pointer-events-none"
             >
-                {/* Zone 1: Header */}
-                <div className="flex justify-between items-center p-6">
-                    <button
-                        onClick={handleClose}
-                        className="p-2 bg-black/20 hover:bg-black/30 rounded-full text-white transition-colors"
-                    >
-                        <ChevronDown size={24} />
-                    </button>
-                    <span className="text-xs font-bold tracking-widest text-white/80 uppercase">
-                        {currentTrack.artist || "EkoSound"}
-                    </span>
-                    <button
-                        onClick={() => setShowActionSheet(true)}
-                        className="p-2 bg-black/20 hover:bg-black/30 rounded-full text-white transition-colors"
-                    >
-                        <MoreHorizontal size={24} />
-                    </button>
-                </div>
+                {/* Hollow space for video interaction */}
+                <div className={currentTrack.type === 'video' ? "h-[60vh] w-full" : "h-20 w-full"} />
 
-                {/* Zone 2: Album Art & Track Info */}
-                <div className="flex flex-col items-center px-8 mb-8">
-                    <div className="w-full aspect-square max-w-[320px] mb-8 relative flex items-center justify-center">
-                        <div className="absolute inset-0 bg-white/10 blur-3xl scale-90 rounded-full opacity-40" />
-                        <RotatingCover
-                            cover={currentTrack.cover || ""}
-                            isPlaying={isPlaying}
-                            scale={albumScale}
-                        />
-                    </div>
+                {/* Content Panel */}
+                <div className="relative z-10 bg-black min-h-screen pointer-events-auto pt-8">
+                    {/* Media Info */}
+                    <div className="flex flex-col items-center px-8 mb-8">
+                        {currentTrack.type !== 'video' && (
+                            <div className="w-full aspect-square max-w-[320px] mb-8 relative flex items-center justify-center">
+                                <div className="absolute inset-0 bg-white/10 blur-3xl scale-90 rounded-full opacity-40" />
+                                <RotatingCover
+                                    cover={currentTrack.cover || ""}
+                                    isPlaying={isPlaying}
+                                    scale={albumScale}
+                                />
+                            </div>
+                        )}
 
-                    {/* Track Metadata */}
-                    <div className="text-center w-full mb-6">
-                        <h2 className="text-3xl font-bold text-white mb-2 truncate px-4">
-                            {currentTrack.title}
-                        </h2>
-                        <p className="text-lg text-white/70 truncate">
-                            {currentTrack.artist || currentTrack.category}
-                        </p>
-                    </div>
-
-                    {/* Add Button */}
-                    <button
-                        onClick={() => toggleFavorite(currentTrack.id)}
-                        className="mb-4"
-                    >
-                        <Heart
-                            size={28}
-                            className={`transition-all ${isFav ? 'fill-[#a05e46] text-[#a05e46] scale-110' : 'text-white/60 hover:text-white'}`}
-                        />
-                    </button>
-                </div>
-
-                {/* Zone 3: Playback Controls */}
-                <div className="px-8 mb-12">
-                    {/* Progress Bar */}
-                    <div className="mb-2">
-                        <input
-                            type="range"
-                            min="0"
-                            max={duration || 100}
-                            value={currentTime}
-                            onChange={(e) => seek(Number(e.target.value))}
-                            className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg"
-                            style={{
-                                background: `linear-gradient(to right, white ${progressPercent}%, rgba(255,255,255,0.2) ${progressPercent}%)`
-                            }}
-                        />
-                    </div>
-
-                    {/* Time Labels */}
-                    <div className="flex justify-between text-xs text-white/50 font-medium mb-8">
-                        <span>{Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')}</span>
-                        <span>-{Math.floor((duration - currentTime) / 60)}:{Math.floor((duration - currentTime) % 60).toString().padStart(2, '0')}</span>
-                    </div>
-
-                    {/* Control Buttons */}
-                    <div className="flex items-center justify-between mb-6">
-                        <button className="text-white/70 hover:text-white transition-colors">
-                            <Shuffle size={24} />
-                        </button>
-
-                        <button onClick={prevTrack} className="text-white/90 hover:text-white transition-colors">
-                            <SkipBack size={36} />
-                        </button>
+                        <div className="text-center w-full mb-6">
+                            <h2 className="text-3xl font-bold text-white mb-2 truncate px-4">
+                                {currentTrack.title}
+                            </h2>
+                            <p className="text-lg text-white/70 truncate">
+                                {currentTrack.artist || currentTrack.category}
+                            </p>
+                        </div>
 
                         <button
-                            onClick={togglePlayPause}
-                            className="w-20 h-20 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_40px_rgba(255,255,255,0.4)]"
+                            onClick={() => toggleFavorite(currentTrack.id)}
+                            className="mb-4"
                         >
-                            {isPlaying ? (
-                                <Pause size={36} fill="currentColor" />
-                            ) : (
-                                <Play size={36} fill="currentColor" className="ml-1" />
-                            )}
-                        </button>
-
-                        <button onClick={nextTrack} className="text-white/90 hover:text-white transition-colors">
-                            <SkipForward size={36} />
-                        </button>
-
-                        <button className="text-white/70 hover:text-white transition-colors">
-                            <Repeat size={24} />
+                            <Heart
+                                size={28}
+                                className={`transition-all ${isFav ? 'fill-[#a05e46] text-[#a05e46] scale-110' : 'text-white/60 hover:text-white'}`}
+                            />
                         </button>
                     </div>
+
+                    {/* Audio Controls */}
+                    {currentTrack.type !== 'video' && (
+                        <div className="px-8 mb-12">
+                            <div className="mb-2">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max={duration || 100}
+                                    value={currentTime}
+                                    onChange={(e) => seek(Number(e.target.value))}
+                                    className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer"
+                                    style={{
+                                        background: `linear-gradient(to right, white ${progressPercent}%, rgba(255,255,255,0.2) ${progressPercent}%)`
+                                    }}
+                                />
+                            </div>
+                            <div className="flex justify-between text-xs text-white/50 font-medium mb-8">
+                                <span>{Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')}</span>
+                                <span>-{Math.floor((duration - currentTime) / 60)}:{Math.floor((duration - currentTime) % 60).toString().padStart(2, '0')}</span>
+                            </div>
+
+                            <div className="flex items-center justify-between mb-6">
+                                <Shuffle size={24} className="text-white/70" />
+                                <button onClick={prevTrack} className="text-white"><SkipBack size={36} /></button>
+                                <button
+                                    onClick={togglePlayPause}
+                                    className="w-20 h-20 rounded-full bg-white text-black flex items-center justify-center shadow-lg"
+                                >
+                                    {isPlaying ? <Pause size={36} fill="currentColor" /> : <Play size={36} fill="currentColor" className="ml-1" />}
+                                </button>
+                                <button onClick={nextTrack} className="text-white"><SkipForward size={36} /></button>
+                                <Repeat size={24} className="text-white/70" />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Artist Card */}
+                    <ArtistDetailsCard
+                        artist={artistInfo}
+                        onFollowToggle={() => showToast('Funcionalidade em breve!', 'info')}
+                        mode="dark"
+                    />
+
+                    <div className="h-32" />
                 </div>
-
-                {/* Zone 4: Artist Details Card */}
-                <ArtistDetailsCard
-                    artist={artistInfo}
-                    onFollowToggle={() => showToast('Funcionalidade em breve!', 'info')}
-                />
-
-                {/* Spacer for comfortable scrolling */}
-                <div className="h-32" />
             </div>
 
-            {/* Action Sheet */}
             <ActionSheet
                 isOpen={showActionSheet}
                 onClose={() => setShowActionSheet(false)}

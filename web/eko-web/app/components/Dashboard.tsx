@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { useAudioStore } from '../../store/useAudioStore';
+import { useAudioStore, Track } from '../../store/useAudioStore';
 import { useToast } from '../context/ToastContext';
 import { Heart } from 'lucide-react';
 import CategoryScroll from './CategoryScroll';
@@ -34,7 +34,7 @@ const CATEGORIES = [
     }
 ];
 
-const TRACKS = [
+const TRACKS: Track[] = [
     {
         id: 1,
         title: "I release the fear",
@@ -43,7 +43,8 @@ const TRACKS = [
         catId: 'foco',
         src: "/music/foco/release_fear.mp3",
         cover: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=150&q=80",
-        description: "Medo de errar"
+        description: "Medo de errar",
+        type: 'audio'
     },
     {
         id: 2,
@@ -53,7 +54,8 @@ const TRACKS = [
         catId: 'foco',
         src: "/music/foco/connected.mp3",
         cover: "https://images.unsplash.com/photo-1489659639091-8b687bc4386e?auto=format&fit=crop&w=150&q=80",
-        description: "Conexão profunda"
+        description: "Conexão profunda",
+        type: 'audio'
     },
     {
         id: 3,
@@ -63,7 +65,8 @@ const TRACKS = [
         catId: 'ansiedade',
         src: "/music/ansiedade/people_world.mp3",
         cover: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=150&q=80",
-        description: "Medo de dinheiro"
+        description: "Medo de dinheiro",
+        type: 'audio'
     },
     {
         id: 4,
@@ -73,7 +76,101 @@ const TRACKS = [
         catId: 'relaxamento',
         src: "/music/relaxamento/you_are_mine.mp3",
         cover: "https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?auto=format&fit=crop&w=150&q=80",
-        description: "Relacionamento tóxico"
+        description: "Relacionamento tóxico",
+        type: 'audio'
+    },
+    {
+        id: 5,
+        title: "Sono Profundo - Música Relaxante",
+        artist: "EkoSound",
+        category: "Sono Profundo",
+        catId: 'sono',
+        src: "",
+        youtubeId: "AFQZWUo904Y",
+        cover: "https://img.youtube.com/vi/AFQZWUo904Y/0.jpg",
+        description: "Vídeo para sono profundo",
+        type: 'video'
+    },
+    {
+        id: 6,
+        title: "Deep Sleep Meditation",
+        artist: "EkoSound",
+        category: "Sono Profundo",
+        catId: 'sono',
+        src: "",
+        youtubeId: "8c2exTUZPHc",
+        cover: "https://img.youtube.com/vi/8c2exTUZPHc/0.jpg",
+        description: "Meditação para dormir",
+        type: 'video'
+    },
+    {
+        id: 7,
+        title: "Healing Sleep Music",
+        artist: "EkoSound",
+        category: "Sono Profundo",
+        catId: 'sono',
+        src: "",
+        youtubeId: "S3dPyhJlI0Q",
+        cover: "https://img.youtube.com/vi/S3dPyhJlI0Q/0.jpg",
+        description: "Música de cura para o sono",
+        type: 'video'
+    },
+    {
+        id: 8,
+        title: "Deep Sleep & Relaxation",
+        artist: "EkoSound",
+        category: "Sono Profundo",
+        catId: 'sono',
+        src: "",
+        youtubeId: "xNdO69JwcV8",
+        cover: "https://img.youtube.com/vi/xNdO69JwcV8/0.jpg",
+        description: "Frequência para sono profundo",
+        type: 'video'
+    },
+    {
+        id: 9,
+        title: "Deep Relaxing Music",
+        artist: "EkoSound",
+        category: "Sono Profundo",
+        catId: 'sono',
+        src: "",
+        youtubeId: "xDZglyqYzlg",
+        cover: "https://img.youtube.com/vi/xDZglyqYzlg/0.jpg",
+        description: "Música relaxante profunda para sono e foco",
+        type: 'video'
+    },
+    {
+        id: 10,
+        title: "Função: desacelerar",
+        artist: "Suno AI",
+        category: "Alívio de Estresse",
+        catId: 'estresse',
+        src: "https://cdn1.suno.ai/b760a879-b1fc-4f8c-b4aa-990b9a7b2173.mp3",
+        cover: "https://cdn2.suno.ai/image_large_b760a879-b1fc-4f8c-b4aa-990b9a7b2173.jpeg",
+        description: "Desacelerar respiração e atenção",
+        type: 'audio'
+    },
+    {
+        id: 11,
+        title: "Mantra Meditação",
+        artist: "Suno AI",
+        category: "Alívio de Estresse",
+        catId: 'estresse',
+        src: "https://cdn1.suno.ai/2c01df35-67b7-481a-8831-154cc0c29073.mp3",
+        cover: "https://cdn2.suno.ai/image_large_2c01df35-67b7-481a-8831-154cc0c29073.jpeg",
+        description: "Mantra suave para meditação",
+        type: 'audio'
+    },
+    {
+        id: 12,
+        title: "MUSICANOVA",
+        artist: "Suno AI",
+        category: "Alívio de Estresse",
+        catId: 'estresse',
+        src: "https://cdn1.suno.ai/f2c1d3ed-bd17-481b-971d-a71e680f0010.mp3",
+        cover: "https://cdn2.suno.ai/image_large_f2c1d3ed-bd17-481b-971d-a71e680f0010.jpeg",
+        description: "Melodia nova de cura",
+        type: 'audio'
     }
 ];
 

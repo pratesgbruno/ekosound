@@ -40,15 +40,32 @@ class AudioController {
         });
 
         this.audio.addEventListener('error', (e) => {
-            console.error("Audio Error:", e);
-            this.emit('error', e);
+            // Only report actual media loading errors if there's a valid source
+            if (this.audio && this.audio.src && !this.audio.src.endsWith('/') && this.audio.networkState !== 3) {
+                console.error("Audio Error:", e);
+                this.emit('error', e);
+            }
         });
     }
 
     private playPromise: Promise<void> | null = null;
 
+    public stop() {
+        if (!this.audio) return;
+        this.audio.pause();
+        // Properly clear source to prevent browser from loading current page as audio
+        this.audio.removeAttribute('src');
+        this.audio.load();
+        this.emit('pause', null);
+    }
+
     public async playTrack(url: string) {
         if (!this.audio) return;
+
+        if (!url) {
+            this.stop();
+            return;
+        }
 
         // If there's a pending play promise, we wait for it or ignore it
         // but calling pause() will interrupt it. We must handle the catch.

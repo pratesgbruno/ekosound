@@ -1,13 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  /* Design System from User Request */
+  /* Design System */
 
   /* Backgrounds */
   --bg-base: #f4f6f0;
   /* Sage Light */
   --bg-app: transparent;
-  /* For layout transparency */
 
   /* Text */
   --text-primary: #1a3c34;
@@ -28,7 +27,6 @@ body {
   font-family: var(--font-sans);
   margin: 0;
   padding: 0;
-  /* Ensure full height for background color consistency */
   min-height: 100vh;
 }
 
@@ -41,7 +39,7 @@ h6 {
   font-family: var(--font-serif);
 }
 
-/* Glassmorphism Utilities - Strict Reference */
+/* Glassmorphism Utilities */
 .glass {
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(12px);
@@ -68,7 +66,7 @@ h6 {
   scrollbar-width: none;
 }
 
-/* Soft UI Shadows for Full Player */
+/* Soft UI Shadows */
 .soft-shadow {
   box-shadow: 0 30px 80px rgba(101, 101, 101, 0.3);
 }
@@ -77,7 +75,6 @@ h6 {
   box-shadow: 0 8px 30px rgba(214, 124, 102, 0.15);
 }
 
-/* Parallax Container */
 .parallax-container {
   scroll-behavior: smooth;
   overscroll-behavior: contain;
@@ -86,14 +83,6 @@ h6 {
 .album-art-transform {
   transition: transform 0.1s linear;
   will-change: transform;
-}
-
-.sticky-player-header {
-  position: sticky;
-  top: 0;
-  backdrop-filter: blur(40px);
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 100;
 }
 
 @keyframes soundwave {
@@ -111,7 +100,6 @@ h6 {
 .bar {
   animation: soundwave 1s infinite ease-in-out;
   background-color: #A65D46;
-  /* Cor Terracota */
   width: 3px;
   border-radius: 99px;
 }
@@ -134,4 +122,34 @@ h6 {
 
 .bar:nth-child(5) {
   animation-delay: 0.3s;
+}
+
+@layer utilities {
+  .video-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60vh;
+    z-index: 0;
+    overflow: hidden;
+    background: black;
+  }
+
+  .video-background iframe {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60vh;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, transparent 20%, transparent 60%, rgba(0, 0, 0, 0.8) 100%);
+  }
 }

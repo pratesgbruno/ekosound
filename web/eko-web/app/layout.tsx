@@ -21,6 +21,8 @@ const playfair = Playfair_Display({
   weight: ["400", "500", "600", "700", "800", "900"],
 });
 
+import PersistentVideo from "./components/PersistentVideo";
+
 export const metadata: Metadata = {
   title: "EkoSound Player",
   description: "Experience music with glassmorphism",
@@ -43,8 +45,9 @@ export default function RootLayout({
         <div className="relative w-full max-w-[480px] min-h-[100dvh] flex flex-col mx-auto shadow-2xl overflow-hidden bg-transparent">
           <ToastProvider>
             <AudioEngine />
+            <PersistentVideo />
 
-            <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32 no-scrollbar relative z-10 w-full flex flex-col">
+            <main className="flex-1 overflow-y-auto overflow-x-hidden pb-48 no-scrollbar relative z-10 w-full flex flex-col">
               {children}
             </main>
 

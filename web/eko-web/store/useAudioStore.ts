@@ -11,6 +11,8 @@ export interface Track {
     cover?: string;
     description?: string;
     catId?: string;
+    type?: 'audio' | 'video';
+    youtubeId?: string;
 }
 
 interface PlayerContext {
@@ -95,17 +97,29 @@ export const useAudioStore = create<AudioState>()(
 
                 // If it's a new track, load and play
                 if (state.currentTrack?.id !== track.id) {
-                    audioController.playTrack(track.src);
-                    set({
-                        currentTrack: track,
-                        isPlaying: true,
-                        isPlayerVisible: true, // Auto-expand as requested
-                        context: context || state.context
-                    });
+                    if (track.type === 'video') {
+                        audioController.stop();
+                        set({
+                            currentTrack: track,
+                            isPlaying: true,
+                            isPlayerVisible: true,
+                            context: context || state.context
+                        });
+                    } else {
+                        audioController.playTrack(track.src);
+                        set({
+                            currentTrack: track,
+                            isPlaying: true,
+                            isPlayerVisible: true,
+                            context: context || state.context
+                        });
+                    }
                 } else {
                     // Same track, just ensure playing and expand
                     if (!state.isPlaying) {
-                        audioController.togglePlay();
+                        if (track.type !== 'video') {
+                            audioController.togglePlay();
+                        }
                         set({ isPlaying: true });
                     }
                     set({ isPlayerVisible: true });
@@ -115,7 +129,9 @@ export const useAudioStore = create<AudioState>()(
             togglePlayPause: () => {
                 const state = get();
                 if (state.currentTrack) {
-                    audioController.togglePlay();
+                    if (state.currentTrack.type !== 'video') {
+                        audioController.togglePlay();
+                    }
                     set({ isPlaying: !state.isPlaying });
                 }
             },
@@ -178,10 +194,8 @@ export const useAudioStore = create<AudioState>()(
             }),
 
             setReduceTransparency: (reduce) => set({ reduceTransparency: reduce }),
-
             syncTime: (time, duration) => set({ currentTime: time, duration }),
             setHasHydrated: (val) => set({ hasHydrated: val }),
-
             initializeFavorites: () => { }, // Handled by persist
             setPlaylist: (tracks) => set({ queue: tracks })
         }),
