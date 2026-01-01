@@ -1,4 +1,9 @@
-export type AudioEventCallback = (data: any) => void;
+export type AudioEventCallback = (data: unknown) => void;
+
+interface AudioErrorEvent {
+    type: string;
+    message: string;
+}
 
 class AudioController {
     private audio: HTMLAudioElement | null = null;
@@ -40,10 +45,10 @@ class AudioController {
         });
 
         this.audio.addEventListener('error', (e) => {
-            // Only report actual media loading errors if there's a valid source
-            if (this.audio && this.audio.src && !this.audio.src.endsWith('/') && this.audio.networkState !== 3) {
-                console.error("Audio Error:", e);
-                this.emit('error', e);
+            if (this.audio && this.audio.src) {
+                const error = this.audio.error;
+                console.error("Audio Error Event:", e, "Code:", error?.code, "Message:", error?.message, "Src:", this.audio.src);
+                this.emit('error', error || new Error("Unknown audio error"));
             }
         });
     }
@@ -59,8 +64,12 @@ class AudioController {
         this.emit('pause', null);
     }
 
-    public async playTrack(url: string) {
-        if (!this.audio) return;
+    public async playTrack(url: string, retryCount = 0) {
+        console.log(`AudioController.playTrack called (attempt ${retryCount + 1}):`, url);
+        if (!this.audio) {
+            console.error("AudioController: No audio element");
+            return;
+        }
 
         if (!url) {
             this.stop();
@@ -73,7 +82,7 @@ class AudioController {
             if (this.playPromise) {
                 await this.playPromise;
             }
-        } catch (e) {
+        } catch {
             // Previous play was interrupted, it's fine
         }
 
@@ -82,15 +91,35 @@ class AudioController {
         this.audio.load();
 
         try {
+            // Mobile Safari requires user interaction to play audio. 
+            // Ensures volume is audible
+            if (this.audio.volume === 0) this.audio.volume = 1.0;
+
             this.playPromise = this.audio.play();
             await this.playPromise;
+            console.log("AudioController: Play started successfully for", url);
             this.emit('play', null);
-        } catch (error: any) {
-            if (error.name === 'AbortError') {
-                // Ignore AbortError as it's common when interrupting play
+        } catch (error) {
+            // Type narrow error
+            const err = error as Error;
+
+            if (err.name === 'AbortError') {
                 return;
             }
-            console.error("Play failed:", error);
+            if (err.name === 'NotAllowedError') {
+                console.error("Auto-play blocked. User interaction required.");
+                this.emit('error', { type: 'interaction_required', message: "Toque para reproduzir" } as AudioErrorEvent);
+                return;
+            }
+
+            // Retry Logic for Network/Decode errors
+            if (retryCount < 2) {
+                console.warn(`Playback failed, retrying in ${1000 * (retryCount + 1)}ms...`);
+                setTimeout(() => this.playTrack(url, retryCount + 1), 1000 * (retryCount + 1));
+                return;
+            }
+
+            console.error("Play failed for url:", url, "Error:", error);
             this.emit('error', error);
         } finally {
             this.playPromise = null;
@@ -105,8 +134,9 @@ class AudioController {
                 this.playPromise = this.audio.play();
                 await this.playPromise;
                 this.emit('play', null);
-            } catch (error: any) {
-                if (error.name !== 'AbortError') {
+            } catch (error) {
+                const err = error as Error;
+                if (err.name !== 'AbortError') {
                     console.error("Play failed:", error);
                 }
             } finally {
@@ -145,7 +175,7 @@ class AudioController {
         this.subscribers.set(event, cbs.filter(cb => cb !== callback));
     }
 
-    private emit(event: string, data: any) {
+    private emit(event: string, data: unknown) {
         const cbs = this.subscribers.get(event);
         if (cbs) {
             cbs.forEach(cb => cb(data));

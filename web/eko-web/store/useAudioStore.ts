@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 import { audioController } from '../lib/AudioController';
 
 export interface Track {
@@ -223,7 +223,8 @@ export const useAudioStore = create<AudioState>()(
 // This needs to run once. We can put it here or in a helper.
 // placing inside the file ensures it runs when module is imported.
 if (typeof window !== 'undefined') {
-    audioController.on('timeupdate', ({ currentTime, duration }) => {
+    audioController.on('timeupdate', (data: unknown) => {
+        const { currentTime, duration } = data as { currentTime: number, duration: number };
         useAudioStore.getState().syncTime(currentTime, duration);
     });
     audioController.on('ended', () => {
@@ -231,4 +232,8 @@ if (typeof window !== 'undefined') {
     });
     audioController.on('play', () => useAudioStore.getState().setIsPlaying(true));
     audioController.on('pause', () => useAudioStore.getState().setIsPlaying(false));
+    audioController.on('error', (e) => {
+        console.error("Store received audio error:", e);
+        useAudioStore.getState().setIsPlaying(false);
+    });
 }

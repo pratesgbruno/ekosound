@@ -1,25 +1,32 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAudioStore } from '../../store/useAudioStore';
 
 export default function PersistentVideo() {
-    const { currentTrack, isPlayerVisible, isPlaying } = useAudioStore();
+    const { currentTrack, isPlayerVisible, isPlaying, togglePlayPause } = useAudioStore();
     const [mounted, setMounted] = useState(false);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    // Sync Store State -> Iframe
+    useEffect(() => {
+        if (!iframeRef.current || !iframeRef.current.contentWindow) return;
+
+        const action = isPlaying ? 'playVideo' : 'pauseVideo';
+        iframeRef.current.contentWindow.postMessage(JSON.stringify({
+            event: 'command',
+            func: action,
+            args: []
+        }), '*');
+    }, [isPlaying, currentTrack?.id]);
+
     if (!mounted || !currentTrack || currentTrack.type !== 'video') {
         return null;
     }
 
-    // Large state: Top 60% of the container
-    // Mini state: Roughly over the MiniPlayer thumbnail (48x48px)
-    // MiniPlayer is at bottom-[88px], left-4. Thumbnail is p-3 (12px) from left/top of MiniPlayer.
-    // So roughly: bottom: 88 + 12 = 100px, left: 16 + 12 = 28px.
-
-    // We use transition for smooth size/position change
     const isMini = !isPlayerVisible;
 
     const styles: React.CSSProperties = isMini ? {
@@ -30,7 +37,7 @@ export default function PersistentVideo() {
         height: '48px',
         borderRadius: '8px',
         zIndex: 45,
-        opacity: isPlaying ? 1 : 0,
+        opacity: 1, // Always visible if it's the current track
         pointerEvents: 'auto',
         transition: 'all 0.5s cubic-bezier(0.19, 1, 0.22, 1)',
         overflow: 'hidden',
@@ -42,7 +49,7 @@ export default function PersistentVideo() {
         left: 0,
         width: '100%',
         height: '60vh',
-        zIndex: 95, // Behind PlayerOverlay (z-100) but above everything else
+        zIndex: 95,
         opacity: 1,
         pointerEvents: 'auto',
         transition: 'all 0.5s cubic-bezier(0.19, 1, 0.22, 1)',
@@ -52,23 +59,19 @@ export default function PersistentVideo() {
     return (
         <div style={styles}>
             <iframe
-                src={`https://www.youtube.com/embed/${currentTrack.youtubeId}?autoplay=1&mute=0&controls=${isMini ? 0 : 1}&rel=0&modestbranding=1&playlist=${currentTrack.youtubeId}&loop=1&fs=1&playsinline=1&enablejsapi=1`}
+                ref={iframeRef}
+                src={`https://www.youtube.com/embed/${currentTrack.youtubeId}?enablejsapi=1&autoplay=1&mute=0&controls=${isMini ? 0 : 1}&rel=0&modestbranding=1&loop=1&playlist=${currentTrack.youtubeId}&playsinline=1`}
                 title="YouTube video player"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                 allowFullScreen
-                style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    pointerEvents: 'auto'
-                }}
+                className="w-full h-full object-cover pointer-events-auto"
             ></iframe>
 
-            {/* Overlay to catch clicks in mini mode and maximize */}
+            {/* Overlay for Mini Mode interaction */}
             {isMini && (
                 <div
-                    className="absolute inset-0 cursor-pointer z-10"
+                    className="absolute inset-0 cursor-pointer z-10 bg-transparent"
                     onClick={() => useAudioStore.getState().maximizePlayer()}
                 />
             )}

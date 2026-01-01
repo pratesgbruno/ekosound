@@ -41,7 +41,7 @@ const TRACKS: Track[] = [
         artist: "EkoSound",
         category: "Foco & Atenção",
         catId: 'foco',
-        src: "/music/foco/release_fear.mp3",
+        src: "/music/foco/release_fear.mp3?v=1",
         cover: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=150&q=80",
         description: "Medo de errar",
         type: 'audio'
@@ -52,7 +52,7 @@ const TRACKS: Track[] = [
         artist: "EkoSound",
         category: "Foco & Atenção",
         catId: 'foco',
-        src: "/music/foco/connected.mp3",
+        src: "/music/foco/connected.mp3?v=1",
         cover: "https://images.unsplash.com/photo-1489659639091-8b687bc4386e?auto=format&fit=crop&w=150&q=80",
         description: "Conexão profunda",
         type: 'audio'
@@ -63,7 +63,7 @@ const TRACKS: Track[] = [
         artist: "EkoSound",
         category: "Redução de Ansiedade",
         catId: 'ansiedade',
-        src: "/music/ansiedade/people_world.mp3",
+        src: "/music/ansiedade/people_world.mp3?v=1",
         cover: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=150&q=80",
         description: "Medo de dinheiro",
         type: 'audio'
@@ -74,7 +74,7 @@ const TRACKS: Track[] = [
         artist: "EkoSound",
         category: "Relaxamento Guiado",
         catId: 'relaxamento',
-        src: "/music/relaxamento/you_are_mine.mp3",
+        src: "/music/relaxamento/you_are_mine.mp3?v=1",
         cover: "https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?auto=format&fit=crop&w=150&q=80",
         description: "Relacionamento tóxico",
         type: 'audio'
@@ -174,6 +174,69 @@ const TRACKS: Track[] = [
     }
 ];
 
+const TrackItem = React.memo(({
+    track,
+    index,
+    isActive,
+    isPlaying,
+    isFavorite,
+    onPlay,
+    onToggleFavorite
+}: {
+    track: Track;
+    index: number;
+    isActive: boolean;
+    isPlaying: boolean;
+    isFavorite: boolean;
+    onPlay: (track: Track) => void;
+    onToggleFavorite: (e: React.MouseEvent, id: string | number) => void;
+}) => (
+    <div
+        onClick={() => onPlay(track)}
+        className={`group flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all duration-300 ${isActive ? 'bg-[#a05e46]/10 shadow-sm' : 'hover:bg-white/40'}`}
+    >
+        <div className="w-8 flex items-center justify-center shrink-0">
+            {isActive && isPlaying ? (
+                <div className="flex gap-[1.5px] items-end h-3">
+                    <div className="w-[2.5px] bg-[#a05e46] animate-[soundwave_1s_infinite] h-2"></div>
+                    <div className="w-[2.5px] bg-[#a05e46] animate-[soundwave_1.2s_infinite] h-full"></div>
+                    <div className="w-[2.5px] bg-[#a05e46] animate-[soundwave_0.8s_infinite] h-1.5"></div>
+                </div>
+            ) : (
+                <span className={`text-[11px] font-bold ${isActive ? 'text-[#a05e46]' : 'text-[#5c6b65]/40'}`}>
+                    {(index + 1).toString().padStart(2, '0')}
+                </span>
+            )}
+        </div>
+
+        <div className="relative w-11 h-11 shrink-0 rounded-xl overflow-hidden shadow-sm">
+            <img src={track.cover} className="w-full h-full object-cover" alt="Thumbnail" />
+        </div>
+
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <h4 className={`text-sm font-bold truncate ${isActive ? 'text-[#a05e46]' : 'text-[#1a3c34] group-hover:text-[#a05e46] transition-colors'}`}>
+                {track.title}
+            </h4>
+            <span className="text-[11px] text-[#5c6b65] font-medium truncate">
+                {track.artist || track.category}
+            </span>
+        </div>
+
+        {/* Duration Placeholder */}
+        <div className="text-[10px] text-[#5c6b65]/40 font-bold hidden group-hover:block">
+            3:45
+        </div>
+
+        <button
+            onClick={(e) => onToggleFavorite(e, track.id)}
+            className={`p-2 rounded-full transition-all ${isFavorite ? 'text-[#a05e46] scale-110' : 'text-[#5c6b65]/30 hover:text-[#a05e46] scale-90'}`}
+        >
+            <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
+        </button>
+    </div>
+));
+TrackItem.displayName = "TrackItem";
+
 export default function Dashboard() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -184,7 +247,6 @@ export default function Dashboard() {
         currentTrack,
         isPlaying,
         setPlaylist,
-        togglePlayPause,
         favorites,
         toggleFavorite,
         initializeFavorites
@@ -197,19 +259,29 @@ export default function Dashboard() {
         initializeFavorites();
     }, [setPlaylist, initializeFavorites]);
 
-    const filteredTracks = TRACKS.filter(t => {
+    const filteredTracks = React.useMemo(() => TRACKS.filter(t => {
         const matchesCategory = selectedCategory ? t.catId === selectedCategory : true;
         const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            t.description?.toLowerCase().includes(searchTerm.toLowerCase());
+            (t.description?.toLowerCase() || "").includes(searchTerm.toLowerCase());
         const isFavorite = favorites.includes(t.id);
         const matchesTab = activeTab === 'all' ? true :
             activeTab === 'favorites' ? isFavorite :
-                activeTab === 'music' ? true : true; // Assuming all are music for now
+                activeTab === 'music' ? true : true;
 
         return matchesCategory && matchesSearch && matchesTab;
-    });
+    }), [selectedCategory, searchTerm, activeTab, favorites]);
 
-    const displayTracks = filteredTracks;
+    const handleToggleFavorite = React.useCallback((e: React.MouseEvent, id: string | number) => {
+        e.stopPropagation();
+        toggleFavorite(id);
+        // We need to check if it was favorite BEFORE toggle to show correct toast, 
+        // OR we just trust the action. Since toggleFavorite is async state update, better check list.
+        // Actually for UI feedback "Saved/Removed", we can infer.
+        // Simplified:
+        useAudioStore.getState().favorites.includes(id)
+            ? showToast("Removido dos favoritos", "info")
+            : showToast("Salvo nos favoritos", "success");
+    }, [toggleFavorite, showToast]);
 
     return (
         <>
@@ -275,66 +347,23 @@ export default function Dashboard() {
 
                 {/* List Items (Clean List Style) */}
                 <div className="space-y-1">
-                    {displayTracks.length === 0 ? (
+                    {filteredTracks.length === 0 ? (
                         <div className="text-center text-[#5c6b65] py-8 text-sm">
                             Nenhum som encontrado.
                         </div>
                     ) : (
-                        displayTracks.map((track, index) => {
-                            const isFav = favorites.includes(track.id);
-                            const isActive = currentTrack?.id === track.id;
-
-                            return (
-                                <div
-                                    key={track.id}
-                                    onClick={() => playTrack(track)}
-                                    className={`group flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all duration-300 ${isActive ? 'bg-[#a05e46]/10 shadow-sm' : 'hover:bg-white/40'}`}
-                                >
-                                    <div className="w-8 flex items-center justify-center shrink-0">
-                                        {isActive && isPlaying ? (
-                                            <div className="flex gap-[1.5px] items-end h-3">
-                                                <div className="w-[2.5px] bg-[#a05e46] animate-[soundwave_1s_infinite] h-2"></div>
-                                                <div className="w-[2.5px] bg-[#a05e46] animate-[soundwave_1.2s_infinite] h-full"></div>
-                                                <div className="w-[2.5px] bg-[#a05e46] animate-[soundwave_0.8s_infinite] h-1.5"></div>
-                                            </div>
-                                        ) : (
-                                            <span className={`text-[11px] font-bold ${isActive ? 'text-[#a05e46]' : 'text-[#5c6b65]/40'}`}>
-                                                {(index + 1).toString().padStart(2, '0')}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div className="relative w-11 h-11 shrink-0 rounded-xl overflow-hidden shadow-sm">
-                                        <img src={track.cover} className="w-full h-full object-cover" alt="Thumbnail" />
-                                    </div>
-
-                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                        <h4 className={`text-sm font-bold truncate ${isActive ? 'text-[#a05e46]' : 'text-[#1a3c34] group-hover:text-[#a05e46] transition-colors'}`}>
-                                            {track.title}
-                                        </h4>
-                                        <span className="text-[11px] text-[#5c6b65] font-medium truncate">
-                                            {track.artist || track.category}
-                                        </span>
-                                    </div>
-
-                                    {/* Duration Placeholder */}
-                                    <div className="text-[10px] text-[#5c6b65]/40 font-bold hidden group-hover:block">
-                                        3:45
-                                    </div>
-
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            toggleFavorite(track.id);
-                                            showToast(isFav ? "Removido" : "Salvo", "info");
-                                        }}
-                                        className={`p-2 rounded-full transition-all ${isFav ? 'text-[#a05e46] scale-110' : 'text-[#5c6b65]/30 hover:text-[#a05e46] scale-90'}`}
-                                    >
-                                        <Heart size={18} fill={isFav ? "currentColor" : "none"} />
-                                    </button>
-                                </div>
-                            );
-                        })
+                        filteredTracks.map((track, index) => (
+                            <TrackItem
+                                key={track.id}
+                                track={track}
+                                index={index}
+                                isActive={currentTrack?.id === track.id}
+                                isPlaying={isPlaying}
+                                isFavorite={favorites.includes(track.id)}
+                                onPlay={playTrack}
+                                onToggleFavorite={handleToggleFavorite}
+                            />
+                        ))
                     )}
                 </div>
             </div>

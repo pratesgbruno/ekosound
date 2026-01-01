@@ -5,7 +5,7 @@ import AudioEngine from "./components/AudioEngine";
 import { ToastProvider } from "./context/ToastContext";
 import PlayerOverlay from "./components/PlayerOverlay";
 import MiniPlayer from "./components/MiniPlayer";
-import BottomNavigation from "./components/BottomNavigation";
+import BottomNavigation from "@/app/components/BottomNavigation";
 import OrganicBackground from "./components/OrganicBackground";
 
 
@@ -28,6 +28,10 @@ export const metadata: Metadata = {
   description: "Experience music with glassmorphism",
 };
 
+import ErrorBoundary from "./components/ErrorBoundary";
+
+// ... existing imports ...
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -43,20 +47,24 @@ export default function RootLayout({
 
         {/* Content Shell: Global container logic - Mobile First optimized constrained width on Desktop */}
         <div className="relative w-full max-w-[480px] min-h-[100dvh] flex flex-col mx-auto shadow-2xl overflow-hidden bg-transparent">
-          <ToastProvider>
-            <AudioEngine />
-            <PersistentVideo />
+          <ErrorBoundary>
+            <ToastProvider>
+              <AudioEngine />
+              <PersistentVideo />
 
-            <main className="flex-1 overflow-y-auto overflow-x-hidden pb-48 no-scrollbar relative z-10 w-full flex flex-col">
-              {children}
-            </main>
+              <main className="flex-1 overflow-y-auto overflow-x-hidden pb-48 no-scrollbar relative z-10 w-full flex flex-col">
+                {children}
+              </main>
 
-            <MiniPlayer />
-            <BottomNavigation />
-            <PlayerOverlay />
-          </ToastProvider>
+              <MiniPlayer />
+              <BottomNavigation />
+              <PlayerOverlay />
+            </ToastProvider>
+          </ErrorBoundary>
         </div>
       </body>
     </html>
   );
 }
+
+// Force rebuild
